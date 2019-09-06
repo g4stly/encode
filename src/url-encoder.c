@@ -9,7 +9,6 @@
 #include "util.h"
 
 static const char *digits = "0123456789ABCDEF";
-static const char *malloc_err = "UrlEncoder->decode(): malloc():";
 static const char *bad_code_err = "UrlEncoder->decode(): bad code: %%%s\n";
 
 // class definition
