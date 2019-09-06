@@ -2,7 +2,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
-#include <errno.h>
 #include <class.h>
 
 #include "encoder.h"
@@ -11,7 +10,6 @@
 
 static const char *digits = "0123456789ABCDEF";
 static const char *malloc_err = "UrlEncoder->decode(): malloc():";
-static const char *strtol_err = "UrlEncoder->encode(): strtol():";
 static const char *bad_code_err = "UrlEncoder->decode(): bad code: %%%s\n";
 
 // class definition
@@ -93,13 +91,11 @@ static void decode_step(int *i, const char *input, int *j, char *output)
 		return;
 	}
 
-	errno = 0;
 	temp[0] = input[(*i)++];
 	temp[1] = input[(*i)++];
 
 	output[(*j)++] = strtol(temp, NULL, 16);
 	if (!output[(*j) - 1]) die(bad_code_err, temp);
-	if (errno) die(strtol_err);
 }
 
 static void *UrlEncoderCtor(void *_self, va_list *ap)
