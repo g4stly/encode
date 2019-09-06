@@ -1,1 +1,1 @@
-www.example.com/a%20bad%20url%20hol%23ly%20cow%20%22this%20is%20%22%20bad
+www.example.com/a%20bad%20url%20hol%23ly%20c%5Bow%20%22this%20is%20%22%20ba%5Dd

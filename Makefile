@@ -7,7 +7,7 @@ INCLUDE	= include
 
 PROJECT	= encode
 TARGET 	= bin/$(PROJECT)
-SOURCES = src/main.c src/url-encoder.c src/util.c
+SOURCES = src/main.c src/encoder.c src/url-encoder.c src/util.c
 OBJECTS	= $(SOURCES:.c=.o)
 
 all: $(TARGET)

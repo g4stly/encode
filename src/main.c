@@ -2,6 +2,7 @@
 #include <class.h>
 
 #include "url-encoder.h"
+#include "encoder.h"
 #include "util.h"
 
 enum Mode
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
 	}
 
 	//TODO: base64 encoder here
-	struct UrlEncoder *e = new(UrlEncoder);
+	struct Encoder *e = new(UrlEncoder);
 
 	char *input = readline();
 	char *output = mode == ENCODE

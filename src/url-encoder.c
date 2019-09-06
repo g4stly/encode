@@ -1,8 +1,11 @@
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <assert.h>
 #include <errno.h>
 #include <class.h>
 
+#include "encoder.h"
 #include "url-encoder.h"
 #include "util.h"
 
@@ -18,13 +21,14 @@ struct UrlEncoderCls {
 
 // representation
 struct R_UrlEncoder {
+	struct Encoder *encoder;
 	struct UrlEncoderCls *cls;
 };
 
 // complete instance struct
 struct _UrlEncoder {
 	struct R_UrlEncoder r;	// representation
-	struct UrlEncoder i;	// interface
+	struct Encoder i;	// interface
 };
 
 static int unsafe(char c)
@@ -51,90 +55,68 @@ static int unsafe(char c)
 	return c <= 0x1F || c >= 0x80;
 }
 
-static char *encode(struct UrlEncoder *_self, const char *input)
+static char *encode(struct Encoder *_self, const char *input)
 {
-	if (!input) return NULL;
-
-	char c;
-	int i = 0, j = 0;
-	size_t len = 8 * sizeof(char);
-
-	char *buffer = malloc(len);
-	if (!buffer) die(malloc_err);
-	memset(buffer, 0, len);
-
-	while ((c = input[i++])) {
-		if (j > len - 2) {
-			len += len;
-			buffer = realloc(buffer, len);
-			if (!buffer) die(malloc_err);
-			memset(buffer + (len / 2), 0, len / 2);
-		}
-
-		if (!unsafe(c)) {
-			buffer[j++] = c;
-			continue;
-		}
-
-		if (c < 0) c = 0;
-
-		buffer[j++] = '%';
-		buffer[j++] = digits[(c / 16) % 16];
-		buffer[j++] = digits[(c) % 16];
-	}
-
-	return buffer;
+	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
+	return self->r.encoder->encode(self->r.encoder, input);
 }
 
-static char *decode(struct UrlEncoder *_self, const char *input)
+static void encode_step(int *i, const char *input, int *j, char *output)
 {
-	if (!input) return NULL;
+	char c = input[(*i)++];
 
-	char c;
-	int i = 0, j = 0;
-	char temp[] = { 0, 0, 0 };
-	size_t len = 8 * sizeof(char);
-
-	char *buffer = malloc(len);
-	if (!buffer) die(malloc_err);
-	memset(buffer, 0, len);
-
-	while ((c = input[i++])) {
-		if (j > len - 2) {
-			len += len;
-			buffer = realloc(buffer, len);
-			if (!buffer) die(malloc_err);
-			memset(buffer + (len / 2), 0, len / 2);
-		}
-
-		if (c != '%') {
-			buffer[j++] = c;
-			continue;
-		}
-
-		errno = 0;
-		temp[0] = input[i++];
-		temp[1] = input[i++];
-
-		buffer[j++] = strtol(temp, NULL, 16);
-		if (!buffer[j - 1]) die(bad_code_err, temp);
-		if (errno) die(strtol_err);
+	if (!unsafe(c)) {
+		output[(*j)++] = c;
+		return;
 	}
 
-	return buffer;
+	if (c < 0) c = 0;
+
+	output[(*j)++] = '%';
+	output[(*j)++] = digits[(c / 16) % 16];
+	output[(*j)++] = digits[(c) % 16];
+}
+
+static char *decode(struct Encoder *_self, const char *input)
+{
+	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
+	return self->r.encoder->decode(self->r.encoder, input);
+}
+
+static char temp[] = { 0, 0, 0 };
+static void decode_step(int *i, const char *input, int *j, char *output)
+{
+	char c = input[(*i)++];
+
+	if (c != '%') {
+		output[(*j)++] = c;
+		return;
+	}
+
+	errno = 0;
+	temp[0] = input[(*i)++];
+	temp[1] = input[(*i)++];
+
+	output[(*j)++] = strtol(temp, NULL, 16);
+	if (!output[(*j) - 1]) die(bad_code_err, temp);
+	if (errno) die(strtol_err);
 }
 
 static void *UrlEncoderCtor(void *_self, va_list *ap)
 {
 	struct _UrlEncoder *self = _self;
+	self->r.encoder = (struct Encoder*) new(Encoder, encode_step, decode_step);
 	self->i.encode = encode;
 	self->i.decode = decode;
+
 	return &self->i;
 }
 
-static void *UrlEncoderDtor(void *self)
+static void *UrlEncoderDtor(void *_self)
 {
-	return self - sizeof(struct R_UrlEncoder);
+	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
+	delete(self->r.encoder);
+	return self;
 }
 
 static const struct UrlEncoderCls _UrlEncoder = {
