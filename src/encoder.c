@@ -48,7 +48,7 @@ static char *translate(
 	if (!buffer) die(malloc_err);
 	memset(buffer, 0, len);
 
-	while (input[i]) {
+	while (i < size) {
 		if (j > len - 2) {
 			len += len;
 			buffer = realloc(buffer, len);

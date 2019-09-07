@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
 	enum Mode mode = ENCODE;
-	enum Scheme scheme = URL;
+	enum Scheme scheme = B64;
 	const char *source = NULL;
 
 	parseOptions(argc, argv, &mode, &scheme, &source);
