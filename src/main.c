@@ -3,17 +3,18 @@
 #include <class.h>
 
 #include "url-encoder.h"
+#include "b64-encoder.h"
 #include "options.h"
 #include "encoder.h"
-#include "util.h"
+#include "input.h"
 
 int main(int argc, char **argv)
 {
-	int aux = 0;
 	enum Mode mode = ENCODE;
 	enum Scheme scheme = URL;
+	const char *source = NULL;
 
-	parseOptions(argc, argv, &mode, &scheme);
+	parseOptions(argc, argv, &mode, &scheme, &source);
 
 	struct Encoder *e;
 	switch (scheme) {
@@ -21,7 +22,7 @@ int main(int argc, char **argv)
 		e = new(UrlEncoder);
 		break;
 	case B64:
-		e = new(UrlEncoder);
+		e = new(B64Encoder);
 		break;
 	case B64U:
 		e = new(UrlEncoder);
@@ -31,15 +32,17 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	char *input = readline();
+	struct Input input;
+	source ? readFile(&input, source) : readStdin(&input);
+
 	char *output = mode == ENCODE
-		? e->encode(e, input)
-		: e->decode(e, input);
+		? e->encode(e, input.bytes, input.size)
+		: e->decode(e, input.bytes, input.size);
 
 	printf("%s\n", output);
 
 	free(output);
-	free(input);
+	free(input.bytes);
 	delete(e);
 
 	return 0;

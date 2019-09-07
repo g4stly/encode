@@ -52,13 +52,15 @@ static int unsafe(char c)
 	return c <= 0x1F || c >= 0x80;
 }
 
-static char *encode(struct Encoder *_self, const char *input)
+static char *encode(struct Encoder *_self, const char *input, int size)
 {
 	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
-	return self->r.encoder->encode(self->r.encoder, input);
+	return self->r.encoder->encode(self->r.encoder, input, size);
 }
 
-static void encode_step(int *i, const char *input, int *j, char *output)
+static void encode_step(
+	int inputSz, int *i, const char *input,
+	int outputSz, int *j, char *output)
 {
 	char c = input[(*i)++];
 
@@ -74,14 +76,16 @@ static void encode_step(int *i, const char *input, int *j, char *output)
 	output[(*j)++] = digits[(c) % 16];
 }
 
-static char *decode(struct Encoder *_self, const char *input)
+static char *decode(struct Encoder *_self, const char *input, int size)
 {
 	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
-	return self->r.encoder->decode(self->r.encoder, input);
+	return self->r.encoder->decode(self->r.encoder, input, size);
 }
 
 static char temp[] = { 0, 0, 0 };
-static void decode_step(int *i, const char *input, int *j, char *output)
+static void decode_step(
+	int inputSz, int *i, const char *input, 
+	int outputSz, int *j, char *output)
 {
 	char c = input[(*i)++];
 

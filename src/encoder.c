@@ -12,14 +12,18 @@ struct EncoderCls {
 
 struct R_Encoder {
 	void (*encode_step)(
+		int inputSz,
 		int *inputIdx,
 		const char *input,
+		int outputSz,
 		int *outputIdx,
 		char *output
 	);
 	void (*decode_step)(
+		int inputSz,
 		int *inputIdx,
 		const char *input,
+		int outputSz,
 		int *outputIdx,
 		char *output
 	);
@@ -32,8 +36,8 @@ struct _Encoder {
 };
 
 static char *translate(
-	const char *input,
-	void (*step)(int *, const char *, int*, char *))
+	const char *input, int size,
+	void (*step)(int, int *, const char *, int, int*, char *))
 {
 	if (!input) return NULL;
 
@@ -53,32 +57,32 @@ static char *translate(
 		}
 
 		// with great power comes great responsibility
-		step(&i, input, &j, buffer);
+		step(size, &i, input, len, &j, buffer);
 	}
 
 	return buffer;
 }
 
-static char *encode(struct Encoder *_self, const char *input)
+static char *encode(struct Encoder *_self, const char *input, int size)
 {
 	struct R_Encoder *self = (void *)_self - sizeof(struct R_Encoder);
-	return translate(input, self->encode_step);
+	return translate(input, size, self->encode_step);
 }
 
-static char *decode(struct Encoder *_self, const char *input)
+static char *decode(struct Encoder *_self, const char *input, int size)
 {
 	struct R_Encoder *self = (void *)_self - sizeof(struct R_Encoder);
-	return translate(input, self->decode_step);
+	return translate(input, size, self->decode_step);
 }
 
 static void *EncoderCtor(void *_self, va_list *ap)
 {
 	struct _Encoder *self = _self;
 	self->r.encode_step = va_arg(
-		*ap, void (*)(int *, const char *, int *, char *)
+		*ap, void (*)(int, int *, const char *, int, int *, char *)
 	);
 	self->r.decode_step = va_arg(
-		*ap, void (*)(int *, const char *, int *, char *)
+		*ap, void (*)(int, int *, const char *, int, int *, char *)
 	);
 	self->i.encode = encode;
 	self->i.decode = decode;

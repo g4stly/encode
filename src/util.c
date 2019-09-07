@@ -17,29 +17,3 @@ void die(const char *fmt, ...) {
 
 	exit(-1);
 }
-
-char *readline()
-{
-	char c;
-	int i = 0;
-	size_t len = 8 * sizeof(char);
-
-	char *buffer = malloc(len);
-	if (!buffer) die("readline():");
-	memset(buffer, 0, len);
-
-	while ((c = getc(stdin)) && c > 0 && c != '\n') {
-		if (i > len - 2) {
-			len += len;
-			buffer = realloc(buffer, len);
-			if (!buffer) die("readline():");
-			memset(buffer + (len / 2), 0, len / 2);
-		}
-		buffer[i++] = c;
-	}
-
-	if (strlen(buffer)) return buffer;
-	free(buffer);
-	return NULL;
-}
-

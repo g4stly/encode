@@ -2,11 +2,18 @@
 #include <stdio.h>
 #include "options.h"
 
-void parseOptions(int argc, char **argv, enum Mode *mode, enum Scheme *scheme)
+void parseOptions(int argc, char **argv,
+	enum Mode *mode,
+	enum Scheme *scheme,
+	const char **source)
 {
 	int aux = 0;
 	for (int i = 1; i < argc; i++) {
 		switch(aux) {
+		case SOURCE:
+			aux = 0;
+			*source = argv[i];
+			continue;
 		case SCHEME:
 			aux = 0;
 			if (!strncmp("url", argv[i], 3)) {
@@ -37,6 +44,9 @@ void parseOptions(int argc, char **argv, enum Mode *mode, enum Scheme *scheme)
 			break;
 		case 's':
 			aux = SCHEME;
+			break;
+		case 'f':
+			aux = SOURCE;
 			break;
 		default:
 			fprintf(stderr, "bad flag: %s\n", argv[i]);
