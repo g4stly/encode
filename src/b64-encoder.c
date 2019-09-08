@@ -69,14 +69,16 @@ static void encode_step(
 	// read three? bytes
 	for (a = 0; a < 3; a++) {
 		if (*i >= inputSz) break;
-		temp = temp | input[(*i)++] << ((2 - a) * 8);
+		// & 0xFF here because wordsize is > 1 byte and 
+		// my platform fills the empty bits with 1's
+		// was the source of a sneaky bug
+		temp = temp | (input[(*i)++] & 0xFF) << ((2 - a) * 8);
 	}
 
 	// write four-ish bytes
 	for (int b = 0; b < 1 + a; b++) {
 		int x = (temp & masks[b]) >> ((3 - b) * 6);
 		output[(*j)++] = alphabetIn(x);
-		if (output[(*j) - 1] == 0) die("wrote null\n");
 	}
 
 	// write padding
