@@ -6,6 +6,7 @@
 
 #include "encoder.h"
 #include "url-encoder.h"
+#include "text.h"
 #include "util.h"
 
 static const char *digits = "0123456789ABCDEF";
@@ -52,10 +53,10 @@ static int unsafe(char c)
 	return c <= 0x1F || c >= 0x80;
 }
 
-static char *encode(struct Encoder *_self, const char *input, int size)
+static struct Text *encode(struct Encoder *_self, struct Text *input)
 {
 	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
-	return self->r.encoder->encode(self->r.encoder, input, size);
+	return self->r.encoder->encode(self->r.encoder, input);
 }
 
 static void encode_step(
@@ -76,10 +77,10 @@ static void encode_step(
 	output[(*j)++] = digits[(c) % 16];
 }
 
-static char *decode(struct Encoder *_self, const char *input, int size)
+static struct Text *decode(struct Encoder *_self, struct Text *input)
 {
 	struct _UrlEncoder *self = (void *)_self - sizeof(struct R_UrlEncoder);
-	return self->r.encoder->decode(self->r.encoder, input, size);
+	return self->r.encoder->decode(self->r.encoder, input);
 }
 
 static char temp[] = { 0, 0, 0 };

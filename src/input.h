@@ -1,12 +1,9 @@
 #ifndef _INPUT_H_
 #define _INPUT_H_
 
-struct Input {
-	long size;
-	char *bytes;
-};
+#include "text.h"
 
-void readStdin(struct Input *input);
-void readFile(struct Input *input, const char *filename);
+struct Text *readStdin();
+struct Text *readFile(const char *filename);
 
 #endif

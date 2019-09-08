@@ -6,6 +6,7 @@
 
 #include "encoder.h"
 #include "b64-encoder.h"
+#include "text.h"
 #include "util.h"
 
 
@@ -52,10 +53,10 @@ static char alphabetOut(int ch)
 	return 0;
 }
 
-static char *encode(struct Encoder *_self, const char *input, int size)
+static struct Text *encode(struct Encoder *_self, struct Text *input)
 {
 	struct _B64Encoder *self = (void *)_self - sizeof(struct R_B64Encoder);
-	return self->r.encoder->encode(self->r.encoder, input, size);
+	return self->r.encoder->encode(self->r.encoder, input);
 }
 
 static const int masks[] = { FIRST, SECOND, THIRD, FOURTH };
@@ -75,32 +76,34 @@ static void encode_step(
 	for (int b = 0; b < 1 + a; b++) {
 		int x = (temp & masks[b]) >> ((3 - b) * 6);
 		output[(*j)++] = alphabetIn(x);
+		if (output[(*j) - 1] == 0) die("wrote null\n");
 	}
 
 	// write padding
 	for (; a < 3; a++) output[(*j)++] = '=';
 }
 
-static char *decode(struct Encoder *_self, const char *input, int size)
+static struct Text *decode(struct Encoder *_self, struct Text *input)
 {
 	struct _B64Encoder *self = (void *)_self - sizeof(struct R_B64Encoder);
-	return self->r.encoder->decode(self->r.encoder, input, size);
+	return self->r.encoder->decode(self->r.encoder, input);
 }
 
 static void decode_step(
 	int inputSz, int *i, const char *input,
 	int outputSz, int *j, char *output)
 {
+	char c;
 	int shift, read = 0, temp = 0;
 
 	// read four? bytes
 	for (int a = 0; a < 4; a++) {
-		if (*i >= inputSz || input[*i] == '=') break;
-		temp = temp | alphabetOut(input[(*i)++]) << ((3 - a) * 6);
+		if (*i >= inputSz || (c = input[(*i)++])  == '=') break;
+		temp = temp | alphabetOut(c) << ((3 - a) * 6);
 		read++;
 	}
 
-	if (read < 2) die("B64Encoder->decode(): early termination\n");
+	if (read < 2) { return; }
 
 	// write three? bytes
 	for (int b = 0; b < read - 1; b++) {

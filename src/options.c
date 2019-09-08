@@ -17,7 +17,7 @@ void parseOptions(int argc, char **argv,
 		case SCHEME:
 			aux = 0;
 			if (!strncmp("url", argv[i], 3)) {
-				scheme = URL;
+				*scheme = URL;
 				continue;
 			}
 			if (!strncmp("b64", argv[i], 3)) {

@@ -1,58 +1,64 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <class.h>
 
+#include "text.h"
 #include "input.h"
 #include "util.h"
 
 
-void readStdin(struct Input *input)
+struct Text *readStdin()
 {
 	char c;
+	int size = 0;
 	size_t len = 8;
 
-	input->size = 0;
-	input->bytes = malloc(len * sizeof(*input->bytes));
-	if (!input->bytes) die("readline():");
-	memset(input->bytes, 0, len * sizeof(*input->bytes));
+	char *bytes = malloc(len * sizeof(*bytes));
+	if (!bytes) die("readline():");
+	memset(bytes, 0, len * sizeof(*bytes));
 
-	while ((c = getc(stdin)) && c > 0 && c != '\n') {
-		if (input->size > len - 2) {
+	while ((c = getc(stdin)) && c > 0) {
+		if (size > len - 2) {
 			len += len;
-			input->bytes = realloc(input->bytes, len);
-			if (!input->bytes) die("readline():");
-			memset(input->bytes + (len / 2), 0, len / 2);
+			bytes = realloc(bytes, len);
+			if (!bytes) die("readline():");
+			memset(bytes + (len / 2), 0, len / 2);
 		}
-		input->bytes[input->size++] = c;
+		bytes[size++] = c;
 	}
+
+	return new(Text, bytes, size);
 }
 
-void readFile(struct Input *input, const char *filename)
+struct Text *readFile(const char *filename)
 {
 	char c;
-	int i = 0;
 	size_t len = 8;
+	int size, i = 0;
 	FILE *file = fopen(filename, "r");
 	if (!file) die("readFile(): fopen():");
 
 	fseek(file, 0, SEEK_END);
-	input->size = ftell(file);
+	size = ftell(file);
 	fseek(file, 0, SEEK_SET);
 
-	input->bytes = malloc(len * sizeof(*input->bytes));
-	if (!input->bytes) die("readFile(): malloc():");
-	memset(input->bytes, 0, len * sizeof(*input->bytes));
+	char *bytes = malloc(len * sizeof(*bytes));
+	if (!bytes) die("readFile(): malloc():");
+	memset(bytes, 0, len * sizeof(*bytes));
 
-	while (i < input->size) {
+	while (i < size) {
 		c = getc(file);
 		if (i > len - 2) {
 			len += len;
-			input->bytes = realloc(input->bytes, len);
-			if (!input->bytes) die("readline():");
-			memset(input->bytes + (len / 2), 0, len / 2);
+			bytes = realloc(bytes, len);
+			if (!bytes) die("readline():");
+			memset(bytes + (len / 2), 0, len / 2);
 		}
-		input->bytes[i++] = c;
+		bytes[i++] = c;
 	}
 
 	fclose(file);
+
+	return new(Text, bytes, size);
 }

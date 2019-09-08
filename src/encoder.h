@@ -1,9 +1,11 @@
 #ifndef ENCODER_H_
 #define ENCODER_H_
 
+#include "text.h"
+
 struct Encoder {
-	char *(*encode)(struct Encoder *e, const char *input, int size);
-	char *(*decode)(struct Encoder *e, const char *input, int size);
+	struct Text *(*encode)(struct Encoder *e, struct Text *input);
+	struct Text *(*decode)(struct Encoder *e, struct Text *input);
 };
 
 extern const void *Encoder;

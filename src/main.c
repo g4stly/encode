@@ -7,6 +7,7 @@
 #include "options.h"
 #include "encoder.h"
 #include "input.h"
+#include "text.h"
 
 int main(int argc, char **argv)
 {
@@ -32,17 +33,19 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	struct Input input;
-	source ? readFile(&input, source) : readStdin(&input);
+	struct Text *input = source 
+		? readFile(source) 
+		: readStdin();
 
-	char *output = mode == ENCODE
-		? e->encode(e, input.bytes, input.size)
-		: e->decode(e, input.bytes, input.size);
+	struct Text *output = mode == ENCODE
+		? e->encode(e, input)
+		: e->decode(e, input);
 
-	printf("%s\n", output);
+	fwrite(output->getBytes(output), sizeof(char),
+		output->getSize(output), stdout);
 
-	free(output);
-	free(input.bytes);
+	delete(output);
+	delete(input);
 	delete(e);
 
 	return 0;
